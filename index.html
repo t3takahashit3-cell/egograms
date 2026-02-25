@@ -3,81 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>エゴグラム簡易診断 | 折れ線グラフ版</title>
-
+    <title>精密エゴグラム診断 | プロファイリング</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
-        :root { --primary:#1e293b; --accent:#3b82f6; --bg:#f1f5f9; --white:#ffffff; }
-        body { font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:#334155;margin:0;line-height:1.8;}
-        .wrapper { max-width:850px;margin:0 auto;background:var(--white);box-shadow:0 10px 25px rgba(0,0,0,0.05);}
-        .hero-img { width:100%; border-bottom:4px solid var(--accent); display: block; background: #2563eb; color: #fff; text-align: center; padding: 30px 0; font-weight: bold; font-size: 1.5rem;}
+        :root { --primary:#1e293b; --accent:#3b82f6; --bg:#f1f5f9; --white:#ffffff; --error:#ef4444; }
+        body { font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:#334155;margin:0;line-height:1.8; display: flex; flex-direction: column; min-height: 100vh;}
+        .wrapper { max-width:850px;margin:0 auto;background:var(--white);box-shadow:0 10px 25px rgba(0,0,0,0.05); flex: 1;}
+        .hero-banner { width: 100%; display: block; background:#1e293b;}
+        .hero-banner img { width: 100%; height: auto; display: block; border-bottom: 4px solid var(--accent); }
         .main-content { padding:40px;}
         header { text-align:center;margin-bottom:40px;}
-        h1 { font-size:2rem;color:var(--primary); margin-bottom: 10px;}
-        .q-card { background:#fff;padding:30px;border-radius:16px;margin-bottom:20px;border:1px solid #e2e8f0; transition: 0.3s;}
+        h1 { font-size:1.8rem;color:var(--primary); margin-bottom: 10px;}
+        .q-card { background:#fff;padding:25px;border-radius:16px;margin-bottom:20px;border:1px solid #e2e8f0; transition: 0.3s;}
         .q-card.answered { border-left:8px solid var(--accent); background: #f8fafc;}
+        .q-card.error { border: 2px solid var(--error); background: #fff1f2; }
         .q-text { font-size:1.1rem;font-weight:700;margin-bottom:20px;display:block;}
         .options { display:flex;gap:12px;}
         .opt-btn { flex:1;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;cursor:pointer;font-weight:bold; transition: 0.2s; text-align: center;}
-        .opt-btn:hover { background: #f1f5f9; }
         .opt-btn.active { background:var(--accent);color:white;border-color:var(--accent);}
-        #diagnose-trigger { display:none;text-align:center;padding:50px 0;}
+        #diagnose-trigger { text-align:center;padding:50px 0;}
         .btn-submit { padding:20px 80px;font-size:1.3rem;font-weight:bold;border-radius:50px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;cursor:pointer; box-shadow: 0 4px 15px rgba(37,99,235,0.3);}
+        #error-msg { color: var(--error); font-weight: bold; margin-bottom: 20px; display: none; text-align: center; background: #fff1f2; padding: 15px; border-radius: 10px; }
         #result-section { display:none;padding:50px 40px;border-top:4px solid var(--accent); background: #fff;}
-        .res-header { text-align:center;margin-bottom:30px;}
-        .res-type { font-size:1.8rem;color:var(--accent);font-weight:900; margin-top: 10px;}
-        .chart-box { 
-            height:450px; 
-            margin-bottom:30px; 
-            background: #fff9e6; /* 画像に近い背景色 */
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #fed7aa;
-        }
-        .advice-box { background:#f8fafc;padding:35px;border-radius:20px;border:1px solid #e2e8f0;white-space:pre-wrap; font-size: 0.95rem;}
+        .res-type { font-size:1.8rem;color:var(--accent);font-weight:900; text-align:center; margin: 20px 0;}
+        .chart-box { height:400px; margin-bottom:30px; background: #fff9e6; padding: 20px; border-radius: 10px; border: 1px solid #fed7aa;}
+        .advice-box { background:#f8fafc;padding:35px;border-radius:20px;border:1px solid #e2e8f0;white-space:pre-wrap; font-size: 0.95rem; line-height: 1.8;}
         .advice-title { font-weight:800;font-size:1.3rem;margin-bottom:15px;color:var(--primary); border-bottom: 2px solid var(--accent); display: inline-block;}
-        .score-box { text-align:center;font-weight:bold;margin-bottom:20px; color: #64748b;}
-        .remaining { position: sticky; top: 0; background: rgba(241,245,249,0.95); padding: 15px; z-index: 100; text-align:center;font-weight:bold;color:var(--accent); border-bottom: 1px solid #ddd;}
+        footer { text-align: center; padding: 20px; color: #64748b; font-size: 0.9rem; background: var(--bg); }
     </style>
 </head>
-
 <body>
-<div class="wrapper">
-    <div class="hero-img">エゴグラム簡易診断</div>
 
+<div class="wrapper">
+    <div class="hero-banner">
+        <img src="https://raw.githubusercontent.com/t3takahashit3-cell/ego2/main/egotitle.png" alt="診断タイトル">
+    </div>
     <div class="main-content">
         <header>
-            <h1>エゴグラム簡易チェックリスト</h1>
-            <p>50の質問から、あなたの心のカタチをパターン分析します</p>
+            <h1>簡易エゴグラムチェックリスト</h1>
+            <p>50の質問から、あなたの心のエネルギー配分を可視化します</p>
         </header>
-
-        <div class="remaining" id="remaining-count">残り50問です</div>
+        
         <div id="questions-container"></div>
 
         <div id="diagnose-trigger">
-            <button class="btn-submit" id="calc-btn">診断結果を表示する</button>
+            <div id="error-msg"></div>
+            <button class="btn-submit" id="calc-btn">診断結果を解析する</button>
         </div>
 
         <div id="result-section">
-            <div class="res-header">
-                <p>あなたの診断結果は...</p>
-                <div id="res-type-name" class="res-type"></div>
-            </div>
-
-            <div class="score-box" id="score-display"></div>
-            
-            <div class="chart-box">
-                <canvas id="egogramChart"></canvas>
-            </div>
-
+            <div id="res-type-name" class="res-type"></div>
+            <div class="chart-box"><canvas id="egogramChart"></canvas></div>
             <div class="advice-box">
-                <div class="advice-title">性格特性とアドバイス</div>
+                <div class="advice-title">分析結果とアドバイス</div>
                 <div id="res-description"></div>
             </div>
-
             <div style="text-align:center;margin-top:30px;">
                 <button class="opt-btn" onclick="location.reload()" style="max-width:300px; padding: 15px 40px;">もう一度診断する</button>
             </div>
@@ -85,207 +66,152 @@
     </div>
 </div>
 
+<footer>
+    ©KOKUZO
+</footer>
+
 <script>
-/* --- 質問データ --- */
 const questions = [
-    { id:1,text:"してみたいことがたくさんある",cat:"FC"},
-    { id:2,text:"無駄遣いはしない",cat:"CP"},
-    { id:3,text:"差し入れや贈り物をするのが好き",cat:"NP"},
-    { id:4,text:"好奇心が旺盛なほうだ",cat:"FC"},
-    { id:5,text:"頼まれると断れない",cat:"AC"},
-    { id:6,text:"自分のやり方にこだわる",cat:"CP"},
-    { id:7,text:"他者の意見の根拠を求める",cat:"A"},
-    { id:8,text:"思ったことが口に出せない",cat:"AC"},
-    { id:9,text:"思いやりがある",cat:"NP"},
-    { id:10,text:"好き・嫌いがハッキリしている",cat:"FC"},
-    { id:11,text:"弱みをみせない",cat:"CP"},
-    { id:12,text:"教え方や伝え方がやさしく丁寧である",cat:"NP"},
-    { id:13,text:"無邪気である",cat:"FC"},
-    { id:14,text:"問題点や欠点に目が向きやすい",cat:"CP"},
-    { id:15,text:"情緒的というより理論的",cat:"A"},
-    { id:16,text:"つらくても我慢することが多い",cat:"AC"},
-    { id:17,text:"物事を人に任せず、自分で決めようとする",cat:"CP"},
-    { id:18,text:"ほかの人の顔色をうかがう",cat:"AC"},
-    { id:19,text:"ジョークやノリの良さで場を和ませるのが好き",cat:"FC"},
-    { id:20,text:"感謝の言葉に喜びを感じる",cat:"NP"},
-    { id:21,text:"人の承認を求める",cat:"AC"},
-    { id:22,text:"事実や数字に基づいて判断する",cat:"A"},
-    { id:23,text:"厳しく教育したほうが本人のためになると思う",cat:"CP"},
-    { id:24,text:"協調性がある",cat:"AC"},
-    { id:25,text:"感情的にならずに冷静に話す",cat:"A"},
-    { id:26,text:"喜怒哀楽の感情がそのまま出る",cat:"FC"},
-    { id:27,text:"客観的な立場で意見を言う",cat:"A"},
-    { id:28,text:"賛成・反対をはっきり言う",cat:"CP"},
-    { id:29,text:"約束やルール、時間に厳しい",cat:"CP"},
-    { id:30,text:"「なぜ」そうなのか、理由を検討する",cat:"A"},
-    { id:31,text:"「わぁ～」「へぇ～」等の感嘆詞をよく使う",cat:"FC"},
-    { id:32,text:"世話好きである",cat:"NP"},
-    { id:33,text:"なげやりな態度をとる",cat:"FC"},
-    { id:34,text:"責任感が強く、他人に対しても責任感を求める",cat:"CP"},
-    { id:35,text:"ほかの人が成長していく姿を見るのが好き",cat:"NP"},
-    { id:36,text:"わがままだと言われる",cat:"FC"},
-    { id:37,text:"表情や態度がソフトで親近感を感じさせる",cat:"NP"},
-    { id:38,text:"計画性がある",cat:"A"},
-    { id:39,text:"他人の言葉や態度を気にするほうだ",cat:"AC"},
-    { id:40,text:"合理的にやろうとする",cat:"A"},
-    { id:41,text:"慎重に行動する",cat:"AC"},
-    { id:42,text:"「～すべきである」「～ねばならない」と思う",cat:"CP"},
-    { id:43,text:"思いついたら行動が早い",cat:"FC"},
-    { id:44,text:"理想を求める",cat:"CP"},
-    { id:45,text:"話し合いでは、状況を把握してから発言する",cat:"A"},
-    { id:46,text:"してほしいことを気軽に口にする",cat:"FC"},
-    { id:47,text:"つい甘やかしてしまう",cat:"NP"},
-    { id:48,text:"相手の気持ちに応えようとする",cat:"AC"},
-    { id:49,text:"ねぎらいや励ましの言葉をかける",cat:"NP"},
-    { id:50,text:"自分が悪くもないのに、すぐに謝る",cat:"AC"}
+    { id:1,text:"してみたいことがたくさんある",cat:"FC"}, { id:2,text:"無駄遣いはしない",cat:"CP"}, { id:3,text:"差し入れや贈り物をするのが好き",cat:"NP"}, { id:4,text:"好奇心が旺盛なほうだ",cat:"FC"}, { id:5,text:"頼まれると断れない",cat:"AC"},
+    { id:6,text:"自分のやり方にこだわる",cat:"CP"}, { id:7,text:"他者の意見の根拠を求める",cat:"A"}, { id:8,text:"思ったことが口に出せない",cat:"AC"}, { id:9,text:"思いやりがある",cat:"NP"}, { id:10,text:"好き・嫌いがハッキリしている",cat:"FC"},
+    { id:11,text:"弱みをみせない",cat:"CP"}, { id:12,text:"教え方や伝え方がやさしく丁寧である",cat:"NP"}, { id:13,text:"無邪気である",cat:"FC"}, { id:14,text:"問題点や欠点に目が向きやすい",cat:"CP"}, { id:15,text:"情緒的というより理論的",cat:"A"},
+    { id:16,text:"つらくても我慢することが多い",cat:"AC"}, { id:17,text:"物事を人に任せず、自分で決めようとする",cat:"CP"}, { id:18,text:"ほかの人の顔色をうかがう",cat:"AC"}, { id:19,text:"ジョークやノリの良さで場を和ませるのが好き",cat:"FC"}, { id:20,text:"感謝の言葉に喜びを感じる",cat:"NP"},
+    { id:21,text:"人の承認を求める",cat:"AC"}, { id:22,text:"事実や数字に基づいて判断する",cat:"A"}, { id:23,text:"厳しく教育したほうが本人のためになると思う",cat:"CP"}, { id:24,text:"協調性がある",cat:"AC"}, { id:25,text:"感情的にならずに冷静に話す",cat:"A"},
+    { id:26,text:"喜怒哀楽の感情がそのまま出る",cat:"FC"}, { id:27,text:"客観的な立場で意見を言う",cat:"A"}, { id:28,text:"賛成・反対をはっきり言う",cat:"CP"}, { id:29,text:"約束やルール、時間に厳しい",cat:"CP"}, { id:30,text:"「なぜ」そうなのか、理由を検討する",cat:"A"},
+    { id:31,text:"「わぁ～」「へぇ～」等の感嘆詞をよく使う",cat:"FC"}, { id:32,text:"世話好きである",cat:"NP"}, { id:33,text:"なげやりな態度をとる",cat:"FC"}, { id:34,text:"責任感が強く、他人に対しても責任感を求める",cat:"CP"}, { id:35,text:"ほかの人が成長していく姿を見るのが好き",cat:"NP"},
+    { id:36,text:"わがままだと言われる",cat:"FC"}, { id:37,text:"表情や態度がソフトで親近感を感じさせる",cat:"NP"}, { id:38,text:"計画性がある",cat:"A"}, { id:39,text:"他人の言葉や態度を気にするほうだ",cat:"AC"}, { id:40,text:"合理的にやろうとする",cat:"A"},
+    { id:41,text:"慎重に行動する",cat:"AC"}, { id:42,text:"「～すべきである」「～ねばならない」と思う",cat:"CP"}, { id:43,text:"思いついたら行動が早い",cat:"FC"}, { id:44,text:"理想を求める",cat:"CP"}, { id:45,text:"話し合いでは、状況を把握してから発言する",cat:"A"},
+    { id:46,text:"してほしいことを気軽に口にする",cat:"FC"}, { id:47,text:"つい甘やかしてしまう",cat:"NP"}, { id:48,text:"相手の気持ちに応えようとする",cat:"AC"}, { id:49,text:"ねぎらいや励ましの言葉をかける",cat:"NP"}, { id:50,text:"自分が悪くもないのに、すぐに謝る",cat:"AC"}
 ];
 
-/* --- 診断データ (29タイプ) --- */
 const masterData = [
-    { name: "タイプ1：CP 優位型", v: [18,10,10,6,6], desc: `非常に頼りがいがあり、リーダーシップを取っているタイプ。自分にも他人にも妥協しないのが特徴です。規律を重視するため、エゴグラム創始者のデュセイは「狂信的愛国者」と名付けています。
-責任感もとても強く指導力が高いのが特徴。ただ我道を行く傾向が強く、周りにいる人は合わせる事を求められます。
-〇アドバイス：FCを高めて本当に望んでいることや直感的にしたい事を大切にしていくと、ご自身も周りの人も楽になります。` },
-    { name: "タイプ2：NP 優位型（への字型）", v: [8,18,10,10,8], desc: `世話好きで面倒見がよく、人の細やかな変化に気付くのが得意なタイプです。困った人を見ると放っておけず、誰かの役に立つことで強い喜びを感じられます。
-ただし過保護になって相手の成長を妨げたり、お世話が自分本位になっていないか注意が必要です。
-〇アドバイス：そのお世話が相手が本当に求めていることか、A（客観性）を高めて冷静に判断してみると良いでしょう。` },
-    { name: "タイプ3：A 優位型（山型・ベル型）", v: [8,10,18,8,8], desc: `落ち着いていてクール、論理的なタイプです。段取り上手で仕事も成果を挙げる方が多いです。
-感情に振り回されない半面、何を考えているかわからないと思われることも。
-〇アドバイス：親しみやすさを出したい場合はNPを、行動力を高めたい場合はFCを意識しましょう。` },
-    { name: "タイプ4：FC 優位型", v: [6,10,10,18,6], desc: `好きなことに一直線、感性豊かなタイプです。楽しみを見つける能力が高く、マイナス思考になることがほとんどありません。
-〇アドバイス：NPを上げると、今の良さに人当たりの良さが加わり、人間関係がさらに良くなります。` },
-    { name: "タイプ5：AC 優位型", v: [6,8,10,8,18], desc: `順応する力が非常に高く、揉め事を起こしにくいタイプです。自分よりも周囲を優先しますが、その分ストレスを溜め込みやすい傾向があります。
-〇アドバイス：ご自身の希望や思いを大切にするため、FCやCPの要素を高めていきましょう。` },
-    { name: "タイプ6：CP 低位型", v: [4,14,14,14,14], desc: `おおざっぱで細かい事は気にせず、自分にも他人にもやさしいタイプです。管理や規律は苦手ですが、落ち着いてのんびり過ごせる相手です。` },
-    { name: "タイプ7：NP 低位型", v: [18,4,10,10,18], desc: `自分にも他人にも厳しく、思いやりを出すのが苦手なため、人間関係でストレスを抱えやすいパターンです。実行力は高いですが慕われにくい面があります。` },
-    { name: "タイプ8：A 低位型（V型）", v: [18,8,4,8,18], desc: `責任感と順応性が高い一方で、自分の感情や論理的な判断を抑え込んでしまう、非常にストレスの強いパターンです。
-〇アドバイス：自分の欲求に素直になる(FC)か、他人に共感する(NP)練習をしてみましょう。` },
-    { name: "タイプ9：FC 低位型（逆への字型）", v: [18,18,14,4,18], desc: `中間管理職的な行動パターンです。真面目で責任感が強いですが、楽しむことが苦手で仕事中毒になりやすい傾向があります。` },
-    { name: "タイプ10：AC 低位型", v: [18,14,14,14,4], desc: `指導力と面倒見の良さを兼ね備えたリーダータイプですが、マイペースで周囲に合わせないためワンマンになりがちです。` },
-    { name: "タイプ11：台形型I", v: [8,18,18,18,8], desc: `自分も他人も肯定できる理想的なバランスです。思いやりがあり、論理的で、遊び心も忘れません。` },
-    { name: "タイプ12：台形型II", v: [6,18,18,6,6], desc: `献身的で人に尽くすナイチンゲールタイプ。自己主張は少ないですが、対人援助職などで力を発揮します。` },
-    { name: "タイプ13：台形型III", v: [6,6,18,18,6], desc: `自分の世界を大切にするタイプ。有能ですが、他者への配慮が欠けると「自分勝手」と思われることがあります。` },
-    { name: "タイプ14：U型I", v: [18,8,4,8,18], desc: `自分を厳しく律しますが、心の葛藤が激しく、自他共に否定しがちな苦しい状態です。` },
-    { name: "タイプ15：U型II", v: [18,8,4,18,18], desc: `エネルギーは高いですが、論理性が欠けるため、感情的に爆発しやすい傾向があります。` },
-    { name: "タイプ16：U型III", v: [18,18,4,8,18], desc: `自分を犠牲にしても人に尽くそうとしますが、葛藤が強く、素直に楽しむことが苦手です。` },
-    { name: "タイプ17：N型I（A低位）", v: [6,18,4,12,18], desc: `非常に優しく断れないタイプ。自分を過労に追い込んでしまう危険があります。` },
-    { name: "タイプ18：N型II（A中位）", v: [6,18,10,10,18], desc: `人のために動くことに喜びを感じるタイプですが、依存されやすい点に注意が必要です。` },
-    { name: "タイプ19：N型III（A優位）", v: [6,18,18,6,18], desc: `有能な働き者。上司には従順ですが、自分の本音を出すことが極端に苦手です。` },
-    { name: "タイプ20：逆N型I", v: [18,6,18,6,6], desc: `有能な実務家。論理と規律を重視し、感情を挟まずに仕事を完遂します。` },
-    { name: "タイプ21：逆N型II", v: [18,6,10,18,6], desc: `究極の我道を行くタイプ。クリエイティブな分野で才能を発揮しやすいです。` },
-    { name: "タイプ22：逆N型III", v: [18,6,6,18,6], desc: `行動力は抜群ですが、後先考えないためトラブルを招きやすい傾向があります。` },
-    { name: "タイプ23：M型", v: [6,18,10,18,6], desc: `「笑顔型」。明るく、優しく、自由。誰からも好かれますが、規律には少しルーズです。` },
-    { name: "タイプ24：W型", v: [18,6,18,6,18], desc: `内面の葛藤が非常に激しいタイプ。能力は高いですが、自分にも他人にも批判的になりやすいです。` },
-    { name: "タイプ25：P 優位型", v: [18,18,10,8,6], desc: `親や上司としての理想的なバランス。厳しさと優しさを使い分けられます。` },
-    { name: "タイプ26：C 優位型", v: [6,8,10,18,18], desc: `甘え上手で無邪気なタイプ。周囲に助けられますが、自立心に課題があります。` },
-    { name: "タイプ27：平坦型I", v: [18,18,18,18,18], desc: `全要素が高く超エネルギッシュ。万能ですが、燃え尽き症候群に注意。` },
-    { name: "タイプ28：平坦型II", v: [10,10,10,10,10], desc: `平均的で波風を立てないタイプ。個性は控えめですが安定感があります。` },
-    { name: "タイプ29：平坦型III", v: [4,4,4,4,4], desc: `エネルギーが全体的に低下している状態です。まずは休養し、好きなことを見つけましょう。` }
+    { name: "タイプ１：CP優位型", v: [18,10,10,6,6], d: "非常に頼りがいがあり、リーダーシップを取っているタイプ。自分にも他人にも妥協しないのが特徴です。規律を重視するため、エゴグラム創始者のデュセイは「狂信的愛国者」と名付けています。\nやると決めたことはやり通すタイプで、責任感もとても強く指導力が高いのが特徴。ただ我道を行く傾向が強く、周りにいる人は合わせる事を求められます。\nCP優位型と関わる人は、子供の部分のC（FC・AC）を保ち続けることが要求されるため、成長が妨げられるのがデメリットです。\n本人は自分の感情を無意識に抑え込んで仕事や目標に取り組む姿勢が強いため、胃潰瘍などの心身症になりやすい一面もあります。\n〇アドバイス\nFCを高めて本当に望んでいることや直感的にしたい事を大切にしていくと、ご自身も周りの人も楽になります" },
+    { name: "タイプ２：NP優位型（への字型）", v: [8,18,10,10,8], d: "NP優位型はグラフの形からへの字型とも呼ばれます。\n世話好きで面倒見がよく、人の細やかな変化に気付くのが得意なタイプです。困った人を見ると放っておけず、人のお世話だけでなく植物や動物のお世話も得意で、誰かの役に立つことで強い喜びを感じられます。\n人の良い所を見つけたり、相手が喜ぶ言葉をかけるのも得意で、共感力が高い方が多いです。\nただし時に自分本位のお世話になっていたり、過保護になって相手の成長を妨げたり、相手から嫌がられる余計なお世話になっていることもあります。親切なことをして相手から感謝されないと、せっかくやってやったのに！と腹が立つ方もいます\nアドバイス\n良いことをしているのに相手が何か喜んでいない様子があれば、そのお世話が相手が求めていることなのか、それとも自分本位のかを振り返ってみると良いです。Aの要素を高めて客観性を取り入れていきます。" },
+    { name: "タイプ３：A優位型（山型・ベル型）", v: [8,10,18,8,8], d: "A優位型はグラフの形から山型、ベル型とも呼ばれます。\n落ち着いていてクールなタイプで、常に先のことを考えて行動するタイプです。段取り上手で論理的思考が高いため、仕事も成果を挙げる方が多いのではないでしょうか。\n感情に振り回されることは無く、思いつきで行動して後悔したり、その場のノリや雰囲気に流されることも無いのですが、感情が表に出にくい分、何を考えているかわからない、親しみにくいと感じられることがあります。またAの高さから考え過ぎて行動せず、やらなかった後悔をする事があります。\n〇アドバイス\nもし「クールすぎる・冷たい」と思われるのが気になるようでしたら、NPを高めればOKです。（他人の良い所・出来ているところをクローズアップさせる）\n考え過ぎて行動力が鈍るのが嫌なのであれば、FCを高めるとご自身の欲求を意識したり大切にすることにつながります。" },
+    { name: "タイプ４：FC優位型", v: [6,10,10,18,6], d: "FC優位型は、好きなことに一直線に取り組めるタイプで、1つのことを夢中に突き詰められるタイプです。感性も豊かなので、アート、音楽などの芸術方面でその力を発揮される方が多い特徴があります。\n楽しみを見つける能力も高く、飛行機に乗ったら隣の人との会話を気楽にできたり、行列の待ち時間も楽しめたり、マイナス思考になることがほとんどありません。\n行動力も非常に高く、考える前に身体が動く半面、その場の空気に流されて行動し、後から後悔することもあります。\n基本的にはわがままだけど愛されるタイプですが、NPが低い場合、周りへの気遣い不足で敵を作ることもあります。悩みがある方から相談されやすいタイプではありません。\n〇アドバイス\nストレスが少ないグラフパターンのため無理に変える必要はありませんが、NPを上げると今の良さに人当たりの良さが加わり、人間関係がさらに良くなります。" },
+    { name: "タイプ５：AC優位型", v: [6,8,10,8,18], d: "AC優位型は順応する力が非常に高く、どんな環境・職場でも揉め事を起しにくいタイプです。\n自分よりも周りの人の希望を優先するやさしさがあり、気遣い上手。そのため周囲の人は楽なのですが、本人は過剰に合わせるためストレスが強いのも特徴です。\nノーと言えないタイプで与えられた仕事をこなすのは得意ですが、自発的に仕事を見つけたり行動するのは苦手です。また、進んで趣味を楽しんだり、自分はこう思う、こうしたい、といった自己主張が苦手で、自分を抑えて他人を優先させる行動パターンになっています。\n〇アドバイス\n他人に合わせるACを低くしたい気持ちがあれば、FC、またはCPの要素を高めると必然的にACは下がります。ご自身の希望や思いも大切にしていきましょう。" },
+    { name: "タイプ６：CP低位型", v: [4,14,14,14,14], d: "良くも悪くもおおざっぱで、細かい事はあまり気にしません。自分にも他人にもやさしく、おおらかなタイプです。\n時間にもお金にもルーズな面はありますが、他人に厳しくないため、結婚生活が長続きしやすいです。目標を立てて理想を追求するタイプではなく、のんびり楽しく過ごすことを重視しています。自分にも他人にも甘いので一緒にいて刺激を受けることは少ないですが、落ち着いてのんびり過ごせる相手です。\n〇アドバイス\n特に問題がないのであれば何も変える必要はありませんが、CPが低いため自己管理を始め、様々な管理が苦手です。冷蔵庫に古いものをいつまでも置いてしまうようなタイプですが、他人が助けてくれる愛嬌を持ち合わせています。\nただし上司・リーダーの立場になると、CPの低さから適切な指導ができないためストレスになります。" },
+    { name: "タイプ７：NP低位型", v: [18,4,10,10,18], d: "NP低位型はストレスが強いパターンです。\n1つ目の理由はCPが高くNPが低いためです。他人にも自分にも厳しいのに加え、他人への思いやりが弱い（NPが低い）ため温かい交流が苦手で、人間関係でストレスを抱えやすくなります。実行力は高いけれど、他人に慕われにくい面があります。\n2つ目の理由はCPとACの高さが関係しています。CPが高いため身近な人に対しても求める事、言いたい事は多々出てきますが、ACが高いためそれを口に出せず溜め込む性質があり、言いたい事を抑え込む傾向があります。\nCPが高いため責任感が強く、決めた事をコツコツと積み重ねていけるため、単独で力を発揮するタイプです。\n〇アドバイス\nNPを高めると必然的にCPとACは下がってきます。頼れる面に加え、面倒見の良さが加わると慕われる親分タイプになります。" },
+    { name: "タイプ８：A低位型（V型）", v: [18,8,4,8,18], d: "エゴグラムV型（A低位型）とは、CP、ACが13以上、NP、A、FCが7以下でAが最も低いグラフパターンで、責任感が非常に強く、自分だけでなく周囲の事も考えながらコツコツ努力できるタイプです。\nただ、ストレスが非常に強いグラフパターンです。\nその理由はシンプルで、CPとACが高く、その他の要素が低いと自分の意見や主張はあるが、人一倍それを抑えて他人に合わせることが多いためです。\n仕事でもプライベートでもCPが高いため人一倍、こうした方が良い。こう思う。こうあるべき、という思考が強いのですが、同時にACが高いため、そう感じていても他人の顔色が強く気になったり、そう感じながらも他人に合わせることが多く、イライラが生まれやすい状態です。\nFC、NPの低さが自分への厳しさに拍車をかけており、仕事や目標に対してはガンガン取り組むけれど、休むことに対する罪悪感が強めで疲労を抱えやすいです。\n〇アドバイス\nこの行動パターンを変える・変えないは本人の選択次第ですが、今のままだとストレスがかなり強いと思います。次の改善方法を実行すると生きやすくなります。\nお勧めの方法はFC、もしくはNPを上げる方法です。両方一気上げるのは難しいので、まずはどちらかやりやすい方から上げてみるのが良いです。\nFCを上げるのは、自分の欲求に素直になったり感情を開くことで、\nNPを上げるのは他人の言い分を聞いたり、共感する、他者のできていない所だけでなく出来ている（出来るようになった）所を意識することです。" },
+    { name: "タイプ９：FC低位型（逆への字型）", v: [18,18,14,4,18], d: "FC低位型はストレスが強いグラフパターンで、一言で表すと中間管理職の行動パターンです。CPとNPが高いため部下の指導や面倒はきっちり行い、ACが高いため上司には非常に従順です。\n板挟みになるストレスもありますが、FCが低いため自分自身が楽しむのが苦手で、仕事中毒で身体を壊す傾向があります。\nNPとACが高いため自分よりも他人を優先する傾向が強く、人からどう思われるかが気になり、気を使うタイプです。\nAが高めの場合、CPとの関係性で「何事も正確にきっちりすべき」という思いが強まり、ストレスがさらにかかります。\n〇アドバイス\nFCを上げれば生きやすくなりますが、急に楽しいことを増やせと言われてもやりにくいかもしれません。その場合はとりあえず疲れたときは休むようにするのがお勧めです。\n自分に非常に厳しく、他人に頼る・甘えるのが苦手です。NPが高い人を見つけ、相手が喜ぶ頼り方を習得するとお互いハッピーな関係性を作れます。" },
+    { name: "タイプ１０：AC低位型", v: [18,14,14,14,4], d: "AC低位型は行動力に面倒見の良さを兼ね備えた、頼れるリーダータイプです。\nシンプルに仕事が出来るだけでなく、指導力と面倒見の良さを兼ね備えており、厳しいけれど慕われる魅力があります。\nCPと合わせてAが高い場合は完璧主義傾向が強くなります。細部にこだわり細やかな変化にもよく気がつきますが、完璧にやれない時は落ち込みやすいです。\n責任感、指導力は非常に強いのですが、ACが低いためマイペースで周りに合わせません。リーダーになった場合「つべこべ言わずに俺についてこい！」と自分のやり方に従わせる傾向があり、周りの人がストレスを感じる事があります。\n〇アドバイス\nストレスに強いタイプですが、ワンマンな状態を変えたいのであれば、他人の意見・言い分をよりしっかりと聞くようにすると、周りの人が少し楽になります。" },
+    { name: "タイプ１１：台形型Ⅰ", v: [8,18,18,18,8], d: "台形型Ⅰは、NP、A、FCが同程度に高く、CPとACが低いパターンで、自分自身も周りの人もストレスが少ない自他肯定型です。\nNPが高いため周囲の人への思いやりが強く、加えてAが高いため自分本位の親切ではなく、相手が求めているものを考えた上で行動できるタイプです。\n他人にやさしいだけでなく、FCが高いため自分が楽しむのも得意で、好きなことや趣味に没頭できます。趣味や食事を楽しむ時もAが高いためハメを外しすぎることはなく、節度を持った楽しみ方ができ、翌日に疲れを持ち越しません。\n他人にも自分にも優しいおおらかな人柄のため異性からの人気も高くなります。人間関係は円滑で仕事もそつなくこなしますが、自分と身内のこと以外にはあまり関心を見せずリーダーに向いているタイプではありません。\n〇アドバイス\nこのタイプが上司やリーダーになった場合、指導・指示が苦手でストレスを抱えやすいです。その場合はCPを上げればOKです。" },
+    { name: "タイプ１２：台形型Ⅱ", v: [6,18,18,6,6], d: "台形型Ⅱは、NPとAが同程度に高く、それ以外の要素が低いパターンです。\n他人を助けることで喜びを感じるタイプで、FCが低いため自分のことはさておき、困った人を見ると放っておけません。多少自分が犠牲になってもそれを問題と思わず、献身的に支えてくれます。\n自分のやりたい事や思っている事を口に出すタイプではなく、それほど自己主張はしません。（CPとFCが低いため）\nまた一緒にいて批判されたり（CPが低いため）、気を使う必要がないので（ACが低いため）、楽でリラックスできます。\n他人を助けることで喜びが感じられるため、対人関係の仕事が向いています。\n台形Ⅰ型と同じく上司・リーダーの立場になった場合、指導・指示が得意ではなく、やってほしい事や止めて欲しい事を伝えられずストレスを抱えやすいです。\nそのためリーダー向きではなく、ナイチンゲールのように人に尽くすタイプです。" },
+    { name: "タイプ１３：台形型Ⅲ", v: [6,6,18,18,6], d: "台形型Ⅲは、AとFCが同程度に高く、それ以外の要素が低いパターンです。\n自分の好きなことや趣味にのめり込むタイプで、なおかつ自分の感情に振り回されることがありません。趣味やお酒等を楽しみながらも、明日は早いからそろそろ止めておこうと考えられたり、ハメを外しすぎて困ることがありません。\nただし台形型Ⅲのタイプは、周囲の人からはあまり良く思われません。その理由は、他人はさておき自分が楽しむために計画を立てる傾向が強いためです。（NPが低く、A、FCが高いとそうなります。）仕事が忙しい時期に連休を取ってバカンスに出かけるような傾向があり、自分さえ良ければいい人と捉えられがちです。\nそのため人間関係が円滑とは言い難く、好かれる人には好かれるけれど、嫌われる人には嫌われて職場などで居心地の悪さを感じることがあります。\n〇アドバイス\n台形型Ⅲが人間関係を改善したい場合、NPを高めればOKです。自分が楽しむことによって、周りの人はどうなるかを考える力がありますが、今は自分自身の楽しみを最優先にしている状態です。そこに他人への思いやりをプラスし、他人も楽しめるように意識したり、相手はどういう状況なのか？どういう気持ちなのか？を意識して思いやる力を高めます。NPを高めて周りの人から好かれると休みも取りやすくなり、結果として継続的に自分の好きなことを続けていける環境が整います。" },
+    { name: "タイプ１４：U型Ⅰ", v: [18,8,4,8,18], d: "U型Ⅰは、CPとACが高く、中央のNP、A、FCが同程度に低いパターンです。\n責任感が強く実行力があり、自分が決めたことをしっかり守れるタイプです。\nただし、ストレスがかなり強いグラフパターンです。理由はCPとACの高さで、言いたい事は人一倍多いけれど、それを抑え込む傾向が強いです。自分にも他人にも厳しく、他人も自分も認めるのが苦手なため、自他否定型のグラフでもあります\nグラフの谷の部分に当たるNP、A、FCの値が低ければ低いほど生き辛さ、ストレスが大きい傾向があります。" },
+    { name: "タイプ１５：U型Ⅱ", v: [18,8,4,18,18], d: "U型Ⅱは、NP、Aが同程度に低く、それ以外の要素が高いパターンです。\n好きな事に夢中になれるだけでなく、目標達成のために必要なことにも取り組めるタイプですが、感情の揺れ幅が大きめです。\n形はエゴグラムV型に近く、ストレスが強いグラフパターンですがFCが高い分、言いたいことを抑え込む葛藤はV型より少なくなります。\nそのためV型よりはストレスが低めですが、Aが低くてFCが高い分、衝動的にブチ切れて爆発するケースが多くなります。怒ったことを後から後悔することも多いです。\nこれを改善するには、感情的に行動しそうになった時に、これをやったらどうなるか？を考えるAの要素を高めれば感情に振り回されることが少なくなります。" },
+    { name: "タイプ１６：U型Ⅲ", v: [18,18,4,8,18], d: "U型Ⅲは、A、FCが同程度に低く、それ以外の要素が高いパターンです。\n自分が苦しくても他人に親切にできるタイプで、自分は少々犠牲になっても周りを大切にします。\nCPとACが高いため心の葛藤が強く、ストレスは強めです。ストレスやしんどさを抱えていても他人に気を配ることができ、他人に尽くすことや役に立つことで喜びを感じます。ただしAが低いため自分本位のお世話になる場合があります。この場合は相手がそのお世話を本当に求めているかどうかを考えてから行動すると、相手にも喜ばれます。\nまたFCが低いため自分のやりたい事は横に置き、他人に尽くす傾向があります。この場合お世話を受ける側からすると無理してやってくれているのかなと感じられ、素直に好意を受け取りにくい場合も出てきます。\n〇アドバイス\n相手に親切にするように、自分自身にもやさしくするFCの要素を高めるとストレスが軽くなります。" },
+    { name: "タイプ１７：N型Ⅰ", v: [6,18,4,12,18], d: "N型は合計3タイプあり、共通の特徴は自分よりも他人を優先し、人間関係を大切にする点です。\nN型Ⅰは、NPとACが高く（13以上）、CPとAが低い（7以下）パターンです。\nN型の中でも最も優しいタイプで、頼まれた仕事はすべて引き受けてくれます。周りの人はとても助かりますが、N型の中でも断るのが最も苦手なタイプで、仕事を抱えすぎて過労になりやすいです。\nN型Ⅰがノーと言えない大きな理由は、NP・ACの高さとCP・Aの低さが関係しています。\nCPが低いため自己主張が苦手なのはN型Ⅱ、Ⅲと同様ですが、加えてAが低いため、これを引き受けたら自分がどうなるかを考えるのが苦手です。さらにNPが高いため自分が苦しくても仕事を引き受け、様々な仕事を抱えていても人に頼めない傾向があります。\n改善方法は、Aの要素を高めていきましょう。頼み事を引き受ける時に、引き受けた場合自分はどうなるかを予測したり、自分が仕事を抱えすぎていると感じたら他人にそれを振れないか考えてみます。\nどうしても自分よりも他人を優先する傾向があれば、あなたが育ってきた過程で無意識に根付いている価値観が根本原因と考えられます。（幼い時期に甘えられない状況が続くと、自分の本音を抑え込む傾向は強くなります。）" },
+    { name: "タイプ１８：N型Ⅱ", v: [6,18,10,10,18], d: "N型は合計3タイプあり、共通の特徴は自分よりも他人を優先し、人間関係を大切にする点です。\nN型ⅡはNPとACが高く（13以上）、CPとFCが低い（7以下）パターンです。\nAもやや高めのため仕事が出来るタイプで、大きな特徴はとにかく他人のために動く点です。\n職場でも家庭でも同様で、人に尽くすことに喜びを感じるため、自分のことはそっちのけで尽くす傾向があります。他人が何を求めているかには非常に敏感ですが、自分が好きなことや食べたいものは放置して他人のために動くタイプです。\nCPとFCが低いため自己主張が苦手で頼まれたら断れず、なおかつAが高めで仕事を頼まれやすく、どんどん仕事を抱えてオーバーワークになる傾向があります。\n人間関係では依存されやすく、共依存の関係になることがあります。\nFCを高めて自分が楽しいと感じることを増やすことが基本ですが、あまりに他人を優先する生き方を続けていると自分がどう思っているか、どうしたいかがわからなくなる場合も多くくなります。\nその場合はまずN型になる理由を振り返ってみて下さい。その上で他人を大切にするように、ご自身の思いや希望も同様に大切にすると生きやすくなるかもしれません。" },
+    { name: "タイプ１９：N型Ⅲ", v: [6,18,18,6,18], d: "N型は合計3タイプあり、共通の特徴は自分よりも他人を優先し、人間関係を大切にする点です。\nN型ⅢはAとACが高く（13以上）、CPとFCが低い（7以下）タイプです。\nエゴグラム創始者のデュセイは「働き者」と名付けており、静かにコツコツ仕事に励むタイプです。Aが高いため仕事の生産性が非常に高く、ノウハウはすぐ自分のものに出来ます。\nCP・FCが低いため自己主張はせず、イエスマンで上司に反発することはありません。\nAとACが高いため不安感が人一倍強く、人からどう思われるかが気になるタイプです。「～すればどう思われるだろうか？」等と何度も考えて疲れます。\nまた自分がどう感じているかを掴むのが苦手なため、疲れていても仕事に励んで過労に繋がる傾向があります。\nN型Ⅲのネックは、自己主張が苦手な点です。Aが高く仕事が出来るタイプのため頼み事をされやすく、断るのが苦手です。\nまた、私はこう思う、こう感じる、こうした方が良いと思うという意見を伝えるのが苦手なため、どうしてもストレスを抱えやすいです。Aが高いため色々と考える点・思う所はあるのですが、自分の思いを主張するのが苦手です。これを改善するためにCPを高めていきましょう。" },
+    { name: "タイプ２０：逆N型1", v: [18,6,18,6,6], d: "逆N型1は、CPとAが同程度に高く（13以上）、NPとACが低い（7以下）グラフで、エゴグラム創始者のデュセイは頑固な警察官と名付けています。\n自分にも他人にも厳しいタイプで実行力があり、論理的に物事を進めるのが得意なため、仕事ぶりは非常に有能です。\nCPとAが高いため間違いを見抜くのが得意で、事務系の仕事が天職です。その他、人と関わる機会が少ないモノづくりなどの職人的な仕事も合っています。\n逆に向いていないのは、人と関わることが多い仕事・人の支援に関わる仕事です。NPが低いため、人への気づかいが苦手で、人の意見を聞いたり取り入れるのはあまり得意ではありません。\n仕事自体は楽しみながら取り組めるタイプで出世しやすいのですが、上司になると部下に必要以上にイラついたり、部下に慕われにくい一面があります。\nそれを改善するのであれば、NPを高めると今の指導力に面倒見の良さが加わり、周りの人からも好かれ、人間関係のストレスがグンと楽になります。" },
+    { name: "タイプ２１：逆N型Ⅱ", v: [18,6,10,18,6], d: "CPとFCが同程度に高く（13以上）、NPとACが低い（7以下）グラフで、究極の我道を行くタイプといえます。他人がどう思うかよりも、自分がどう思うか、どうしたいかを優先し、自分の人生を生きるのが得意です。\n言いたいことはズバズバ言えるタイプで、嫌なことだけでなく好意も軽く言える特性のため、エゴグラム創始者のデュセイはドンファン（プレイボーイ）と名付けています。\nFCが高いのが大きな特徴で、好きな事に対しての集中力は非常に高く、何時間でもそれに取り組めるタイプです。加えてCPが高いため、それを地道に積み重ねる力も兼ね備えています。\nただしNPが低く他人にあまり気を使わないため、どうしても自分勝手でわがままと捉えられがちです。\n適職は芸術・音楽・芸能関係、モノづくりなどで特にその才能が発揮されやすいです。\nNPが低いため人のサポート・支援に関わる仕事には向いていません。\nFCが高く、A・NPが低いため浮気しやすい傾向があり、罪悪感もあまり覚えません。\nNPを上げていくと人間関係が円滑になり、自分自身の居場所を作りやすくなります。" },
+    { name: "タイプ２２：逆N型Ⅲ", v: [18,6,6,18,6], d: "CPとFCが同程度に高く（13以上）、AとACが低い（7以下）グラフです。\nCPとFCが高いため、好きなことには一直線にガンガン取り組めるタイプですが、Aが低いため感情に流されやすく、その場のノリで動いて後悔することがあります。\nAが低くFCが高いため、良くも悪くも調べる前に身体が動くタイプで、後先考えずに行動します。また、事実関係や状況を整理する力が弱いため、うまくいかないことがあると人のせいにする傾向があります。\n適職は逆N型Ⅱと同じく芸術・音楽・芸能関係、モノづくりなどで、好きなことに関してのめり込むタイプです。\nAを上げるとカッとなって怒りをぶつけてしまい、後から後悔することが無くなります。" },
+    { name: "タイプ２３：M型", v: [6,18,10,18,6], d: "NP、FCが13以上、CP、ACは7以下、AがNP・FCよりも低めのグラフパターンで、人当たりが良い人気者で誰からも好かれるタイプです。\n自分にも他人にも優しい自他肯定形のグラフで、周りの人は一緒にいて非常に楽ですし、好きなことは突き詰めるタイプで高い魅力を持ちます。\nコミュニケーション能力も高く、嫌なことは嫌と伝えられ、共感しながら話を聞くのも得意です。若干わがままな面はありますが、好きに振る舞いながら愛される特性があります。\nその行動パターンとエゴグラムの形から、笑顔型とも言われています。\nただしAが低いM型の場合、その場の空気に流されて行動して後から後悔したり、衝動買いをしてしまったり、お金や時間に若干ルーズなところがあります。自分の感情に流されやすく、「今日はダルいからサボろう」と、目的本位の行動は苦手です。\nまた、NPが高くてAが低い点から、相手が求めていない親切心を出しがちです。" },
+    { name: "タイプ２４：W型", v: [18,6,18,6,18], d: "CP、A、ACが13以上、NP、FCが7以下のグラフパターンで、エゴグラムの中でも要注意の形です。\n※高要素（CP、A、AC）と低要素（NP、FC）の落差が4程度であれば下記の傾向は弱くなります。\nその理由はCPとACの高さにあります。CPが高いため自分にも他人にも厳しく、こうして欲しい、これは止めた方が良い、こうすべきという気持ちは人一倍強いのですが、ACが高いためそれを口に出せず抑え込む傾向があります。結果として怒りやイライラを溜め込み、自分も他人も否定しがちなグラフパターンです。\nそこに加えてAが高いため、自分や他人の弱点・出来ていない点を的確に把握でき、辛さに拍車がかかっています。家に帰って1人になった時も、ちょっとした失敗でも何度も思い起こして後悔したり、他人の至らないところを思い返してイライラする傾向があります。\nもちろん強みもあり、CPとAが高いため感情に左右されず、決めた事に淡々と取り組めます。今日は気が乗らないからサボろう、ダルいから休もうといった気分に左右されることなく、目的本位の行動ができます。" },
+    { name: "タイプ２５：P優位型", v: [18,18,10,8,6], d: "P優位型はCPとNPが同程度に高いタイプです。\n頼れるだけでなく慕われる人間力を兼ね備えており、上司・親の鏡です。\nCPが高いため指導力・統率力が高く、なおかつNPが高いため面倒見も良いです。厳しさとやさしさを兼ね備えており、P優位型の部下はにとっては非常に働きやす上司です。\nACの低さも魅力の1つではありますが、ACがかなり低いと周囲の人はP優位型に振り回される傾向があります。\n〇アドバイス\nFCを高めてご自身の欲求・好きなことを大切にされると、さらに人間味が増して親しみやすくなります。" },
+    { name: "タイプ２６：C優位型", v: [6,8,10,18,18], d: "C優位型はFCとACが同程度に高いタイプです。\n大人になっても無邪気であどけない部分があり、甘え上手で守ってあげたくなるタイプですが、相手に依存しやすい傾向があります。\nCPとAがかなり低い場合、気分にまかせて行動することが多く、時間や決め事が守るのが苦手です。\n好奇心が強く好きなことに熱中できるタイプですが自制が効かず、時間を忘れてゲームに没頭したり、オンラインゲームに度を超えて課金する等、行動してから後悔することもあります。\n〇アドバイス\n体調管理、金銭管理、時間管理などの自己管理が苦手な面がありますので、CP、またはAを高めると気持ちの面で安定感が出てきます。" },
+    { name: "タイプ２７：平坦型Ⅰ", v: [18,18,18,18,18], d: "平坦型Ⅰは5つの要素すべてが同程度に高いタイプです。\nすべての要素が高いため、非常にエネルギッシュですが頑張り過ぎて過労になる場合があります。なかなかいないパターンですので、このタイプの方がエネルギッシュに見えないのであれば、素直に心理テストに取り組んだかどうか少しあやしいと感じます。\n5つすべて高位だった方は、自分を良く見せたい、認めてほしい思いが強いという仮説も立ちます。" },
+    { name: "タイプ２８：平坦型Ⅱ", v: [10,10,10,10,10], d: "平坦型Ⅱは5つすべてが中程度のパターンです。\nすべてが平均的で良くも悪くも目立つタイプではなく、特徴が無いのが特徴です。グラフの形通り、敵も味方も作らない中立な点が特徴ともいえます。\n目立った個性は見られず、人と違ったことをするのが得意ではありません。" },
+    { name: "タイプ２９：平坦型Ⅲ", v: [4,4,4,4,4], d: "平坦型Ⅲは5つすべてが低いパターンです。\n物静かで控え目なタイプで滅多に怒ることはなく、全体的な心的エネルギーが低い状態といえます。\n統合失調症などの精神疾患があると神経過敏で非常に細やかなことに意識が向く傾向がありますが、エネルギーを神経過敏な所に取られ、それ以外の所に使えていない場合、5つすべての要素が低くなる事があります。" }
 ];
 
-/* --- システムロジック --- */
-const container = document.getElementById("questions-container");
-const remainingCount = document.getElementById("remaining-count");
-let answers = {};
+let userAns = {};
 
-// 質問の生成
-questions.forEach(q => {
-    const div = document.createElement("div");
-    div.className = "q-card";
-    div.id = `q-${q.id}`;
-    div.innerHTML = `
-        <span class="q-text">Q${q.id}. ${q.text}</span>
-        <div class="options">
-            <button class="opt-btn" onclick="select(${q.id},2,this)">はい</button>
-            <button class="opt-btn" onclick="select(${q.id},1,this)">どちらでもない</button>
-            <button class="opt-btn" onclick="select(${q.id},0,this)">いいえ</button>
-        </div>
-    `;
-    container.appendChild(div);
-});
-
-function select(id, val, btn) {
-    answers[id] = val;
-    const parent = btn.closest(".q-card");
-    parent.querySelectorAll(".opt-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    parent.classList.add("answered");
-    updateRemaining();
-}
-
-function updateRemaining() {
-    const left = questions.length - Object.keys(answers).length;
-    remainingCount.textContent = left > 0 ? `残り${left}問です` : "回答完了！結果を確認してください";
-    if (left === 0) document.getElementById("diagnose-trigger").style.display = "block";
-}
-
-document.getElementById("calc-btn").addEventListener("click", () => {
-    let scores = { CP: 0, NP: 0, A: 0, FC: 0, AC: 0 };
-    questions.forEach(q => { scores[q.cat] += (answers[q.id] || 0); });
-
-    const result = advancedMatch(scores);
-    document.getElementById("res-type-name").textContent = result.name;
-    document.getElementById("res-description").innerText = result.desc;
-    document.getElementById("score-display").textContent = 
-        `CP:${scores.CP} / NP:${scores.NP} / A:${scores.A} / FC:${scores.FC} / AC:${scores.AC}`;
-
-    document.getElementById("result-section").style.display = "block";
-    drawChart(scores);
-    document.getElementById("result-section").scrollIntoView({ behavior: "smooth" });
-});
-
-function advancedMatch(userScores) {
-    const categories = ["CP", "NP", "A", "FC", "AC"];
-    let best = null;
-    let minDiff = Infinity;
-    masterData.forEach(type => {
-        let diff = 0;
-        categories.forEach((cat, i) => { diff += Math.pow(userScores[cat] - type.v[i], 2); });
-        if (diff < minDiff) { minDiff = diff; best = type; }
+function init() {
+    const container = document.getElementById("questions-container");
+    container.innerHTML = "";
+    questions.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "q-card";
+        div.id = `q-card-${q.id}`;
+        div.innerHTML = `
+            <span class="q-text">Q${q.id}. ${q.text}</span>
+            <div class="options">
+                <button class="opt-btn" onclick="setAns(${q.id}, 2, this)">はい</button>
+                <button class="opt-btn" onclick="setAns(${q.id}, 1, this)">どちらでもない</button>
+                <button class="opt-btn" onclick="setAns(${q.id}, 0, this)">いいえ</button>
+            </div>`;
+        container.appendChild(div);
     });
-    return best;
 }
 
-/* --- グラフ生成 (折れ線グラフ形式) --- */
-let chart;
-function drawChart(scores) {
-    const ctx = document.getElementById("egogramChart");
-    if (chart) chart.destroy();
+window.setAns = function(id, val, btn) {
+    userAns[id] = val;
+    const btns = btn.parentElement.querySelectorAll(".opt-btn");
+    btns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const card = document.getElementById(`q-card-${id}`);
+    card.classList.add("answered");
+    card.classList.remove("error");
+};
+
+document.getElementById("calc-btn").onclick = function() {
+    const errorMsg = document.getElementById("error-msg");
+    const unans = questions.filter(q => userAns[q.id] === undefined);
+
+    if (unans.length > 0) {
+        const ids = unans.map(q => "Q" + q.id).join(", ");
+        errorMsg.innerText = `未回答の質問があります：${ids}`;
+        errorMsg.style.display = "block";
+        unans.forEach(q => document.getElementById(`q-card-${q.id}`).classList.add("error"));
+        document.getElementById(`q-card-${unans[0].id}`).scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+    }
+
+    errorMsg.style.display = "none";
     
+    let score = { CP:0, NP:0, A:0, FC:0, AC:0 };
+    questions.forEach(q => { score[q.cat] += userAns[q.id]; });
+
+    const best = findType(score);
+    document.getElementById("res-type-name").innerText = best.name;
+    document.getElementById("res-description").innerText = best.d;
+    document.getElementById("result-section").style.display = "block";
+    
+    draw(score);
+    document.getElementById("result-section").scrollIntoView({ behavior: "smooth" });
+};
+
+function findType(s) {
+    const u = [s.CP, s.NP, s.A, s.FC, s.AC];
+    let min = Infinity;
+    let match = masterData[0];
+    masterData.forEach(m => {
+        let diff = 0;
+        m.v.forEach((val, i) => { diff += Math.pow(u[i] - val, 2); });
+        if (diff < min) { min = diff; match = m; }
+    });
+    return match;
+}
+
+let chart;
+function draw(s) {
+    const ctx = document.getElementById("egogramChart").getContext('2d');
+    if (chart) chart.destroy();
     chart = new Chart(ctx, {
-        type: "line",
+        type: 'line',
         data: {
             labels: ["CP", "NP", "A", "FC", "AC"],
             datasets: [{
-                data: [scores.CP, scores.NP, scores.A, scores.FC, scores.AC],
-                borderColor: "#2563eb",
-                backgroundColor: "#2563eb",
-                borderWidth: 3,
+                data: [s.CP, s.NP, s.A, s.FC, s.AC],
+                borderColor: '#3b82f6',
+                borderWidth: 4,
                 pointRadius: 6,
-                pointHoverRadius: 8,
                 fill: false,
-                tension: 0 // 折れ線にする（画像に合わせて）
+                tension: 0
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: {
-                    grid: { display: true, color: "#fed7aa", borderDash: [5, 5] },
-                    ticks: { font: { size: 16, weight: 'bold' }, color: "#334155" }
-                },
-                y: {
-                    min: 0,
-                    max: 20,
-                    beginAtZero: true,
-                    ticks: { stepSize: 2, display: false }, // 数値は画像に合わせて非表示
-                    grid: { color: "#fed7aa", borderDash: [5, 5] }
-                }
-            }
+            scales: { y: { min: 0, max: 20, ticks: { stepSize: 2 } } },
+            plugins: { legend: { display: false } }
         }
     });
 }
+
+window.onload = init;
 </script>
 </body>
 </html>
